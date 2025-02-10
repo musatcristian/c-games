@@ -1,0 +1,13 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": ["${workspaceFolder}/**"],
+      "defines": [],
+      "compilerPath": "/usr/lib64/ccache/gcc",
+      "cppStandard": "gnu++17",
+      "cStandard": "c11"
+    }
+  ],
+  "version": 4
+}
