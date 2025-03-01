@@ -2,7 +2,12 @@
   "configurations": [
     {
       "name": "Linux",
-      "includePath": ["${workspaceFolder}/**"],
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/usr/include/**",
+        "/usr/include/glib-2.0/glib",
+        "/usr/lib64/**"
+      ],
       "defines": [],
       "compilerPath": "/usr/lib64/ccache/gcc",
       "cppStandard": "gnu++17",
