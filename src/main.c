@@ -3,37 +3,28 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define CENTER_W width / 2 - p_width / 2
+#define CENTER_H height / 2 - p_height / 2
+
 const uint16_t width = 800;
 const uint16_t height = 600;
 const uint8_t step = 5;
-const uint8_t fps = 60;
+const uint8_t fps = 40;
 const uint8_t p_height = 80;
 const uint8_t p_width = 20;
 const uint8_t radius = 20;
 
-// typedef enum
-// {
-//     UP,
-//     DOWN
-// } POSITION;
-
 int main(void)
 {
-    // POSITION pos = UP;
-    int l_posX = 0;
-    int l_posY = height / 2 - p_height / 2;
     uint8_t l_score = 0;
-
-    int r_posX = width - p_width;
-    int r_posY = height / 2 - p_height / 2;
     uint8_t r_score = 0;
 
-    // raylib stuff
-    Vector2 posBall = {
+    // RAYLIB stuff
+    Vector2 ball_pos = {
         .x = 1.0f + radius,
         .y = 1.0f + radius,
     };
-    Vector2 velBall = {
+    Vector2 ball_vel = {
         .x = 5.0f,
         .y = 4.0f,
     };
@@ -44,15 +35,15 @@ int main(void)
     InitWindow(width, height, "Raylib App");
     SetTargetFPS(fps);
     Rectangle l_paddle = {
-        .x = l_posX,
-        .y = l_posY,
+        .x = 0,
+        .y = CENTER_H,
         .height = p_height,
         .width = p_width,
     };
 
     Rectangle r_paddle = {
-        .x = r_posX,
-        .y = r_posY,
+        .x = width - p_width,
+        .y = CENTER_H,
         .height = p_height,
         .width = p_width,
     };
@@ -64,9 +55,15 @@ int main(void)
         .y = 100,
     };
 
+    // AUDIO
+    InitAudioDevice();
+    Sound hitSound = LoadSound("assets/bum.wav");
+
+    // MAIN LOOP
     while (!WindowShouldClose())
     {
 
+        // MOVE PADDLES
         if (IsKeyDown(KEY_W) && l_paddle.y > 0)
         {
             l_paddle.y -= step;
@@ -86,46 +83,60 @@ int main(void)
         {
             r_paddle.y += step;
         }
-        posBall.x += velBall.x;
-        posBall.y += velBall.y;
 
-        l_collision = CheckCollisionCircleRec(posBall, (float)radius, l_paddle);
-        r_collision = CheckCollisionCircleRec(posBall, (float)radius, r_paddle);
-        // Check walls collision for bouncing
-        if ((posBall.x >= (GetScreenWidth() - radius)))
-            velBall.x *= -1.0f;
-        if ((posBall.y >= (GetScreenHeight() - radius)) || (posBall.y <= radius))
-            velBall.y *= -1.0f;
+        // MOVE BALL
+        ball_pos.x += ball_vel.x;
+        ball_pos.y += ball_vel.y;
 
-        if (r_collision || l_collision)
+        // DETECT COLLISION with PADDLES
+        l_collision = CheckCollisionCircleRec(ball_pos, (float)radius + 0.1f, l_paddle);
+        r_collision = CheckCollisionCircleRec(ball_pos, (float)radius + 0.1f, r_paddle);
+
+        // Collision detection right wall
+        if ((ball_pos.y >= (GetScreenHeight() - radius + 5)) || (ball_pos.y <= radius - 5))
+            ball_vel.y *= -1.0f;
+
+        // change velocity on paddle collision
+        if (r_collision)
         {
-            velBall.x *= -1.0f;
+            PlaySound(hitSound);
+            ball_vel.x = -4;
+        }
+        if (l_collision)
+        {
+            PlaySound(hitSound);
+            ball_vel.x = 4;
         }
 
-        if (posBall.x <= radius)
+        /**
+         * Detect Collision with horizontal walls
+         * reset ball
+         * increase score
+         */
+        if (ball_pos.x <= radius - 10)
         {
             r_score += 1;
-            posBall.x = width / 2 - p_width / 2;
-            posBall.y = height / 2 - p_height / 2;
+            ball_pos.x = CENTER_W;
+            ball_pos.y = CENTER_H;
 
-            velBall.x = 0;
-            velBall.y = 0;
+            ball_vel.x = 0;
+            ball_vel.y = 0;
         }
 
-        if (posBall.x >= width - radius)
+        if (ball_pos.x >= width - radius + 10)
         {
             l_score += 1;
-            posBall.x = width / 2 - p_width / 2;
-            posBall.y = height / 2 - p_height / 2;
+            ball_pos.x = CENTER_W;
+            ball_pos.y = CENTER_H;
 
-            velBall.x = 0;
-            velBall.y = 0;
+            ball_vel.x = 0;
+            ball_vel.y = 0;
         }
         Vector2 mouse_pos = GetMousePosition();
-        if (CheckCollisionPointRec(mouse_pos, start_btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+        if ((CheckCollisionPointRec(mouse_pos, start_btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) || IsKeyDown(KEY_ENTER))
         {
-            velBall.x = 2.0f;
-            velBall.y = -4.0f;
+            ball_vel.x = 2.0f;
+            ball_vel.y = -4.0f;
         }
 
         BeginDrawing();
@@ -137,10 +148,12 @@ int main(void)
 
         DrawRectangleRec(l_paddle, l_collision ? RED : ORANGE);
         DrawRectangleRec(r_paddle, r_collision ? RED : ORANGE);
-        DrawCircleV(posBall, (float)radius, (r_collision || l_collision) ? BLUE : DARKBLUE);
+        DrawCircleV(ball_pos, (float)radius, (r_collision || l_collision) ? BLUE : DARKBLUE);
         EndDrawing();
     }
 
+    UnloadSound(hitSound);
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
