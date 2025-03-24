@@ -9,10 +9,12 @@
 const uint16_t width = 800;
 const uint16_t height = 600;
 const uint8_t step = 5;
-const uint8_t fps = 40;
+const uint8_t fps = 60;
 const uint8_t p_height = 80;
 const uint8_t p_width = 20;
 const uint8_t radius = 20;
+const uint8_t vel_x = 5.0f;
+const uint8_t vel_y = 5.0f;
 
 int main(void)
 {
@@ -25,11 +27,12 @@ int main(void)
         .y = 1.0f + radius,
     };
     Vector2 ball_vel = {
-        .x = 5.0f,
-        .y = 4.0f,
+        .x = vel_x,
+        .y = vel_y,
     };
     uint8_t l_collision = 0;
     uint8_t r_collision = 0;
+    uint8_t isSoundPlaying = 0;
 
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(width, height, "Raylib App");
@@ -99,7 +102,11 @@ int main(void)
         // change velocity on paddle collision
         if (r_collision)
         {
-            PlaySound(hitSound);
+            if (!isSoundPlaying)
+            {
+                PlaySound(hitSound);
+                isSoundPlaying = true;
+            }
             ball_vel.x = -4;
         }
         if (l_collision)
@@ -135,8 +142,13 @@ int main(void)
         Vector2 mouse_pos = GetMousePosition();
         if ((CheckCollisionPointRec(mouse_pos, start_btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) || IsKeyDown(KEY_ENTER))
         {
-            ball_vel.x = 2.0f;
-            ball_vel.y = -4.0f;
+            ball_vel.x = vel_x;
+            ball_vel.y = -vel_y;
+        }
+
+        if (isSoundPlaying)
+        {
+            isSoundPlaying = false;
         }
 
         BeginDrawing();
