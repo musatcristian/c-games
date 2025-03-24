@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <rcamera.h>
 
 #define CENTER_W width / 2 - p_width / 2
 #define CENTER_H height / 2 - p_height / 2
@@ -13,8 +14,8 @@ const uint8_t fps = 60;
 const uint8_t p_height = 80;
 const uint8_t p_width = 20;
 const uint8_t radius = 20;
-const uint8_t vel_x = 5.0f;
-const uint8_t vel_y = 5.0f;
+const float vel_x = 5.0f;
+const float vel_y = 5.0f;
 
 int main(void)
 {
